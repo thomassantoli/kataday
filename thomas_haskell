@@ -1,0 +1,29 @@
+import Data.Char
+
+main = do
+ l <- getLine
+ putStrLn $ piglatin l
+
+
+
+singlepiglatin _ [] [] = []
+singlepiglatin t pre [] = let (y:ys) = reverse pre in if t then y : ys ++ "ay" else toUpper y : ys ++ "ay"
+singlepiglatin _ [] (x:xs) | elem x "aeiouAEIOU" = x : xs ++ "way"
+ | isLower x = singlepiglatin True [x] xs
+ | otherwise = singlepiglatin False [toLower x] xs
+singlepiglatin t pre (x:xs) | elem x "aeiou" = if t then x : xs ++ reverse pre ++ "ay" else toUpper x : xs ++ reverse pre ++ "ay"
+ | otherwise = singlepiglatin t (x:pre) xs
+
+
+
+
+parseletters (x:xs) | isAlpha x = fmap (x:) $ parseletters xs
+parseletters xs = (xs,[])
+
+
+
+
+piglatin [] = []
+piglatin s = case parseletters s of
+ ([],w) -> singlepiglatin True [] w
+ (x:xs,w) -> singlepiglatin True [] w ++ x : piglatin xs
