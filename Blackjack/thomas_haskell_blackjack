@@ -1,0 +1,68 @@
+type Card = String
+type Hand = [Card]
+
+type Player = String
+type Match = [(Player,Hand)]
+
+
+main = do
+ print test1 
+ putStrLn $ "----> " ++ resultMatch test1
+ print test2 
+ putStrLn $ "----> " ++ resultMatch test2
+ print test3 
+ putStrLn $ "----> " ++ resultMatch test3
+ print test4 
+ putStrLn $ "----> " ++ resultMatch test4
+
+
+----get the winner of a match
+resultMatch :: Match -> String
+resultMatch m = case thewinners [] m of
+ [] -> "There is no winner."
+ [x] -> "The winner is " ++ x ++ "!"
+ (y:ys) -> "Tie between" ++ foldr (\ x xs -> ' ' : x ++ ',' : xs) (" and " ++ y) ys ++ "!"
+
+
+
+evalHand :: Int -> Hand -> (Int,Int)
+evalHand t [] = (t,0)
+evalHand t (h:hs) | h == "A" = fmap succ $ evalHand (succ t) hs
+ | elem h ["K","Q","J"] = fmap (10+) $ evalHand t hs
+ | otherwise = fmap (read h +) $ evalHand t hs
+
+
+----get the score of a single hand (if it's valid)
+score :: Hand -> Maybe Int
+score h | 5 < length h = Nothing
+ | otherwise = bestuse $ evalHand 0 h
+
+
+bestuse :: (Int,Int) -> Maybe Int
+bestuse (t,n) | 21 < n = Nothing
+ | t == 0 = Just n
+ | 11 < n = Just n
+ | t == 1 = Just $ n + 10
+ | n == 1 = Just 21
+ | otherwise = Just $ n + 10
+
+
+
+
+thewinners :: [(Player,Int)] -> Match -> [Player]
+thewinners ws [] = map fst ws
+thewinners [] ((p,h):phs) = case score h of 
+ Nothing -> thewinners [] phs
+ (Just n) -> thewinners [(p,n)] phs
+thewinners ((w,k):ws) ((p,h):phs) = case score h of 
+ Nothing -> thewinners ((w,k):ws) phs
+ (Just n) -> if n < k then thewinners ((w,k):ws) phs else if n == k then thewinners ((p,n):(w,k):ws) phs else thewinners [(p,n)] phs
+
+
+
+---------some tests 
+
+test1 = [("me",["A","J"]),("you",["1","4"])]
+test2 = [("John",["1","K","Q"]),("Alice",["A","J"])]
+test3 = [("toomany",["A","A","A","1","2","3"])]
+test4 = [("a",["A", "10", "A"]),("b",["8", "A", "A"]),("c",["5", "3", "7"])]
